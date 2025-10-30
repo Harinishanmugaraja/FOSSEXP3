@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Redis Notification Demo</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #list { margin-top: 12px; list-style: none; padding: 0; }
+    li { padding: 6px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h2>Notifications Demo</h2>
+  <div>
+    <label>User ID: <input id="userid" value="42"></label>
+    <button id="connect">Connect</button>
+  </div>
+
+  <div style="margin-top:10px;">
+    <strong>Received notifications:</strong>
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    let socket;
+    document.getElementById('connect').addEventListener('click', () => {
+      const userId = document.getElementById('userid').value.trim() || '42';
+      if (socket) socket.disconnect();
+
+      socket = io('http://localhost:3000');
+
+      socket.on('connect', () => {
+        console.log('Connected', socket.id);
+        socket.emit('register', userId);
+      });
+
+      socket.on('notification', (data) => {
+        const ul = document.getElementById('list');
+        const li = document.createElement('li');
+        const time = new Date().toLocaleTimeString();
+        li.textContent = `[${time}] ${data.title || ''} ${data.body || JSON.stringify(data)}`;
+        ul.prepend(li);
+      });
+
+      socket.on('disconnect', () => console.log('Socket disconnected'));
+    });
+  </script>
+</body>
+</html>
